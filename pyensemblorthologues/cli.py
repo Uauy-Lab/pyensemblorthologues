@@ -29,6 +29,12 @@ def help():
     print("Tool to download ortologue genes from ensembl compara")
 
 
+class MainProgram:
+    def __init__(self) -> None:
+
+        pass
+
+
 def main():
     Fire({"help": help})
 
@@ -41,9 +47,10 @@ def main():
     cc = ComparaConsumer(server=server, compara=compara)
     ss = cc.species_sets(method=method, species=species)
     print(ss)
-    ort = cc.regions(method=method, species=species, interval=interval)
+    ort = cc.regions(
+        method=method, species=species, interval=interval, target_species=target_species
+    )
     print(ort)
-    print(target_species)
 
 
 if __name__ == "__main__":
