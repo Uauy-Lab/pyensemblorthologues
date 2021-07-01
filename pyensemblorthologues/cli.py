@@ -1,8 +1,7 @@
 """Console script for pyensemblorthologues."""
-import Fire
-import fire
 import Mikado.loci
 import Mikado.parsers
+from fire import Fire
 
 from .compara_consumer import ComparaConsumer
 
