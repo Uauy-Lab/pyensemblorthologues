@@ -35,20 +35,18 @@ class MainProgram:
 
 
 def main():
-    Fire({"help": help})
+    # Fire({"help": help})
 
     method = "LASTZ_NET"
     species = "triticum_aestivum"
-    target_species = "triticum_turgidum"
+    # target_species = "triticum_turgidum"
     interval = "3B:684798558-684799943"
     compara = "plants"
     server = "http://rest.ensembl.org"
     cc = ComparaConsumer(server=server, compara=compara)
     ss = cc.species_sets(method=method, species=species)
     print(ss)
-    ort = cc.regions(
-        method=method, species=species, interval=interval, target_species=target_species
-    )
+    ort = cc.regions(method=method, species=species, interval=interval)
     print(ort)
 
 
