@@ -1599,7 +1599,7 @@ test = ["pytest", "black", "isort", "flake8", "flake8-docstrings", "pytest-cov"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.1,<4.0"
-content-hash = "fce2d8790abebf3b2a7e33ad6b2a57ad1fc9d87fcfa77f6d7da0191ff3e8d2fe"
+content-hash = "60cf144f50b9b238eedd47b9c1b3285d5a52ffafda1bb011dab8499f584be6f2"
 
 [metadata.files]
 amply = [

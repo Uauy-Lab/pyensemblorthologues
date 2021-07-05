@@ -9,7 +9,7 @@ class ComparaConsumer:
 
     def request(self, url, args):
         full_url = f"{self.server}/{url}?{args}"
-        # print(full_url)
+        print(full_url)
         r = requests.get(full_url, headers={"Content-Type": "application/json"})
         if r.ok:
             return r.json()
@@ -39,7 +39,7 @@ class ComparaConsumer:
             sp = list(filter(lambda s: s != species, species_set))
             if len(sp) == 1:
                 ret.append(sp[0])
-        return ret
+        return list(set(ret))
 
     def regions(
         self,

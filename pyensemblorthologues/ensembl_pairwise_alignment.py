@@ -1,9 +1,13 @@
 import pprint
 
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+
 
 class EnsemblSequenceRegion:
     def __init__(self, data):
         self.data = data
+        pprint.pp(data)
 
     @property
     def seq(self):
@@ -43,6 +47,16 @@ class EnsemblSequenceRegion:
     def __len__(self):
         return abs(self.end - self.start)
 
+    @property
+    def record(self):
+        record = SeqRecord(
+            Seq(self.seq),
+            id=f"{self.species}_{self.region}",
+            name=self.species,
+            description=f"{self.species} {self.region} {self.description}",
+        )
+        return record
+
 
 class EnsemblPairwiseAlignment:
     def __init__(self, aln, base="triticum_aestivum"):
@@ -56,12 +70,14 @@ class EnsemblPairwiseAlignment:
     def alignments(self):
         return self.__alignments
 
+    @property
     def base(self):
         for a in self.alignments:
             if a.species == self.base_id:
                 return a
         raise f"Unable to find base alignment {self}"
 
+    @property
     def other(self):
         for a in self.alignments:
             if a.species != self.base_id:
@@ -69,7 +85,7 @@ class EnsemblPairwiseAlignment:
         raise f"Unable to find other alignment {self}"
 
     def __len__(self):
-        a = self.base()
+        a = self.base
         return len(a)
 
     def __repr__(self):

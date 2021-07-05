@@ -1,7 +1,9 @@
 """Console script for pyensemblorthologues."""
 import Mikado.loci
 import Mikado.parsers
+from Bio import SeqIO
 from fire import Fire
+from pyensemblorthologues.MSARegions import MSARegion
 
 from .compara_consumer import ComparaConsumer
 
@@ -48,6 +50,10 @@ def main():
     print(ss)
     ort = cc.regions(method=method, species=species, interval=interval)
     print(ort)
+
+    msa = MSARegion(ort)
+    print(msa.aligned())
+    SeqIO.write(msa.aligned(), "example.fasta", "fasta")
 
 
 if __name__ == "__main__":
