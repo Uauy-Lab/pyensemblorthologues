@@ -9,7 +9,7 @@ class ComparaConsumer:
 
     def request(self, url, args):
         full_url = f"{self.server}/{url}?{args}"
-        print(full_url)
+        # print(full_url)
         r = requests.get(full_url, headers={"Content-Type": "application/json"})
         if r.ok:
             return r.json()

@@ -7,7 +7,7 @@ from Bio.SeqRecord import SeqRecord
 class EnsemblSequenceRegion:
     def __init__(self, data):
         self.data = data
-        pprint.pp(data)
+        # pprint.pp(data)
 
     @property
     def seq(self):
@@ -106,7 +106,9 @@ class EnsemblPairwiseAlignments:
 
     def longest(self):
         ret = self.alns[0]
+        print("Finding longest...")
         for aln in self.alns:
+            pprint.pp(aln)
             if len(aln) > len(ret):
                 ret = aln
         return ret
