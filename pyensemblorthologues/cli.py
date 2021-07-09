@@ -42,23 +42,23 @@ class Compara:
         gff,
         method="LASTZ_NET",
         species="triticum_aestivum",
-        flank=5000,
+        flank=1000,
         compara="plants",
         server="http://rest.ensembl.org",
     ):
         cc = ComparaConsumer(server=server, compara=compara)
-        print(gff)
+        # print(gff)
         parser = Mikado.parsers.parser_factory(gff, "gff3")
         i = 0
         for row in parser:
             if row.is_gene is True and row.attributes["biotype"] == "protein_coding":
-                print(row)
-                print(row.attributes)
+                # print(row)
+                # print(row.attributes)
                 # print(row.start)
                 # print(row.end)
                 # print(row.strand)
                 # print(row.chrom)
-                interval = region_for_gene(row)
+                interval = region_for_gene(row, flank=flank)
                 print(interval)
                 id = row.id.replace("gene:", "")
                 print(id)

@@ -2,6 +2,7 @@ import pprint
 
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from Mikado.parsers.GFF import GffLine
 
 
 class EnsemblSequenceRegion:
@@ -15,7 +16,11 @@ class EnsemblSequenceRegion:
 
     @property
     def strand(self):
-        return self.data["strand"]
+        if self.data["strand"] > 0:
+            return "+"
+        elif self.data["strand"] < 0:
+            return "-"
+        return None
 
     @property
     def start(self):
@@ -93,6 +98,30 @@ class EnsemblPairwiseAlignment:
             f"<EnsemblPairwiseAlignment len:{len(self)} alignments:{self.alignments} >"
         )
 
+    @property
+    def gff(self):
+        base = self.base
+        other = self.other
+        # print(other)
+        gff = GffLine("")
+        gff.attributes["chrom"] = base.seq_region
+        gff.attributes["start"] = base.start
+        gff.attributes["end"] = base.end
+
+        gff.attributes["strand"] = base.strand
+        gff.attributes["source"] = "Ensembl_compara"
+        gff.attributes["feature"] = "SO:0000853"
+        gff.attributes["score"] = "."
+        gff.attributes["phase"] = "."
+        gff.attributes["attributes"] = {}
+        gff.attributes["attributes"]["ID"] = f"{other.species}:{other.region}"
+        gff.attributes["attributes"]["species"] = other.species
+        gff.attributes["attributes"]["region"] = other.region
+        gff.attributes["attributes"]["strand"] = other.strand
+        # pprint.pp(gff.attributes)
+        # print(GffLine.string_from_dict(gff.attributes))
+        return GffLine.string_from_dict(gff.attributes)
+
 
 class EnsemblPairwiseAlignments:
     def __init__(self, response, base="triticum_aestivum"):
@@ -108,7 +137,8 @@ class EnsemblPairwiseAlignments:
         ret = self.alns[0]
         print("Finding longest...")
         for aln in self.alns:
-            pprint.pp(aln)
+            # pprint.pp(aln)
+            print(aln.gff)
             if len(aln) > len(ret):
                 ret = aln
         return ret
