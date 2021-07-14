@@ -1,8 +1,11 @@
 """Console script for pyensemblorthologues."""
+import pprint
+
 import Mikado.loci
 import Mikado.parsers
 from Bio import SeqIO
 from fire import Fire
+from Mikado.parsers.GFF import GffLine
 from pyensemblorthologues.MSARegions import MSARegion
 
 from .compara_consumer import ComparaConsumer
@@ -42,39 +45,46 @@ class Compara:
         gff,
         method="LASTZ_NET",
         species="triticum_aestivum",
-        flank=1000,
+        flank=2000,
         compara="plants",
         server="http://rest.ensembl.org",
+        output="output.gff",
+        longest=False,
+        sequence=False,
     ):
         cc = ComparaConsumer(server=server, compara=compara)
         # print(gff)
+        # Examples to try: TraesCS7A02G175200 (Nikolai) TraesCS6A02G313800 (Andy)
         parser = Mikado.parsers.parser_factory(gff, "gff3")
         i = 0
+        f = open(output, "w")
         for row in parser:
             if row.is_gene is True and row.attributes["biotype"] == "protein_coding":
-                # print(row)
-                # print(row.attributes)
-                # print(row.start)
-                # print(row.end)
-                # print(row.strand)
-                # print(row.chrom)
                 interval = region_for_gene(row, flank=flank)
                 print(interval)
                 id = row.id.replace("gene:", "")
                 print(id)
-                ort = cc.regions(method=method, species=species, interval=interval)
-                if len(ort) < 5:
-                    continue
+                ort = cc.regions(
+                    method=method, species=species, interval=interval, longest=longest
+                )
 
-                msa = MSARegion(ort)
-                print(msa.unaligned)
-                # print(msa.aligned())
-                SeqIO.write(msa.aligned(), f"{id}.fasta", "fasta")
-                # print(ort)
+                for aln in ort:
+                    f.write(GffLine.string_from_dict(aln.gff(seq=sequence).attributes))
+                    f.write("\n")
                 i += 1
             if i > 10:
                 break
+        f.close()
         # ss = cc.species_sets(method=method, species=species)
+
+    def msa(self, ort):
+        if len(ort) < 5:
+            pass  # should be a continue.
+        msa = MSARegion(ort)
+        print(msa.unaligned)
+        # print(msa.aligned())
+        SeqIO.write(msa.aligned(), f"{id}.fasta", "fasta")
+        pass
 
 
 class Pipeline:

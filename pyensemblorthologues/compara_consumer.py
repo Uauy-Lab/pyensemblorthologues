@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import requests
 from pyensemblorthologues.ensembl_pairwise_alignment import EnsemblPairwiseAlignments
 
@@ -46,6 +48,7 @@ class ComparaConsumer:
         method="LASTZ_NET",
         species="triticum_aestivum",
         interval="3B:684798558-684799943",
+        longest=False,
     ):
         species_sets = self.species_sets(method=method, species=species)
         ret = []
@@ -56,5 +59,8 @@ class ComparaConsumer:
             if not alignment:
                 continue
             epas = EnsemblPairwiseAlignments(alignment, base=species)
-            ret.append(epas.longest())
+            if longest:
+                ret.append(epas.longest)
+            else:
+                ret.extend(epas.alns)
         return ret

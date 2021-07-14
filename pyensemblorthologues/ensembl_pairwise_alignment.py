@@ -98,8 +98,7 @@ class EnsemblPairwiseAlignment:
             f"<EnsemblPairwiseAlignment len:{len(self)} alignments:{self.alignments} >"
         )
 
-    @property
-    def gff(self):
+    def gff(self, seq=False):
         base = self.base
         other = self.other
         # print(other)
@@ -118,27 +117,39 @@ class EnsemblPairwiseAlignment:
         gff.attributes["attributes"]["species"] = other.species
         gff.attributes["attributes"]["region"] = other.region
         gff.attributes["attributes"]["strand"] = other.strand
-        # pprint.pp(gff.attributes)
-        # print(GffLine.string_from_dict(gff.attributes))
-        return GffLine.string_from_dict(gff.attributes)
+        if seq:
+            gff.attributes["attributes"]["seq"] = other.seq
+        return gff
 
 
 class EnsemblPairwiseAlignments:
     def __init__(self, response, base="triticum_aestivum"):
         self.response = response
         self.base = base
-        self.alns = list(
+        self.__alns = list(
             map(
                 lambda aln: EnsemblPairwiseAlignment(aln, base=self.base), self.response
             )
         )
 
+    @property
     def longest(self):
-        ret = self.alns[0]
-        print("Finding longest...")
+        ret = self.__alns[0]
+        # print("Finding longest...")
         for aln in self.alns:
             # pprint.pp(aln)
-            print(aln.gff)
+            # print(aln.gff)
+            # print(f"Comparing {len(aln)} > {len(ret)}")
             if len(aln) > len(ret):
+                # print("longer....")
                 ret = aln
+        # print(f"Returning... {ret}")
         return ret
+
+    @property
+    def alns(self):
+        return self.__alns
+
+    @property
+    def gff(self):
+        return map(lambda aln: aln.gff, self.alns)
