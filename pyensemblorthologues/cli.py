@@ -1,4 +1,6 @@
 """Console script for pyensemblorthologues."""
+import os
+import pathlib
 import pprint
 
 import Mikado.loci
@@ -9,6 +11,15 @@ from Mikado.parsers.GFF import GffLine
 from pyensemblorthologues.MSARegions import MSARegion
 
 from .compara_consumer import ComparaConsumer
+
+
+def ouput_path(gff=None, output=None):
+    if output is None and gff is None:
+        raise "Output folder for the pipline or GFF file to infer the path is required"
+    if output is None:
+        output = os.path.splitext(gff)[0]
+    pathlib.Path(output).mkdir(parents=True, exist_ok=True)
+    return output
 
 
 def strip_utr(gene: Mikado.loci.Gene):
@@ -54,7 +65,7 @@ class Compara:
         flank=2000,
         compara="plants",
         server="http://rest.ensembl.org",
-        output="output.gff",
+        output=None,
         longest=False,
         sequence=False,
     ):
@@ -63,7 +74,10 @@ class Compara:
         # Examples to try: TraesCS7A02G175200 (Nikolai) TraesCS6A02G313800 (Andy)
         parser = Mikado.parsers.parser_factory(gff, "gff3")
         i = 0
-        f = open(output, "w")
+        output = ouput_path(gff=gff, output=output)
+        print(f"output: {output}")
+        output_gff = f"{output}/compara_aln.gff3"
+        f = open(output_gff, "w")
         for row in parser:
             if row.is_gene is True and row.attributes["biotype"] == "protein_coding":
                 interval = region_for_gene(row, flank=flank)
@@ -71,7 +85,11 @@ class Compara:
                 print(row)
                 print(row.attributes)
                 ort = cc.regions(
-                    method=method, species=species, interval=interval, longest=longest, parent=row.id
+                    method=method,
+                    species=species,
+                    interval=interval,
+                    longest=longest,
+                    parent=row.id,
                 )
                 f.write(str(row))
                 f.write("\n")
@@ -84,13 +102,19 @@ class Compara:
         f.close()
         # ss = cc.species_sets(method=method, species=species)
 
-    def msa(self, ort):
-        if len(ort) < 5:
-            pass  # should be a continue.
-        msa = MSARegion(ort)
-        print(msa.unaligned)
-        # print(msa.aligned())
-        SeqIO.write(msa.aligned(), f"{id}.fasta", "fasta")
+    def msa(self, output=None, gff=None, reference=None):
+        output = ouput_path(gff=gff, output=output)
+        parser = Mikado.parsers.parser_factory(f"{output}/compara_aln.gff3", "gff3")
+        for row in parser:
+            if row.feature == "SO:0000239":  # This is the parent region
+                pass
+
+        # if len(ort) < 5:
+        #     pass  # should be a continue.
+        # msa = MSARegion(ort)
+        # print(msa.unaligned)
+        # # print(msa.aligned())
+        # SeqIO.write(msa.aligned(), f"{id}.fasta", "fasta")
         pass
 
 
