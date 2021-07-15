@@ -34,8 +34,14 @@ def help():
 
 
 def region_for_gene(row, flank=5000):
+    id = row.id.replace("gene:", "")
+    row.id = f"{id}:{flank}"
     start = row.start - flank
     end = row.end + flank
+    row.feature = "SO:0000239"
+    row.start = start
+    row.end = end
+
     return f"{row.chrom}:{start}-{end}"
 
 
@@ -62,12 +68,13 @@ class Compara:
             if row.is_gene is True and row.attributes["biotype"] == "protein_coding":
                 interval = region_for_gene(row, flank=flank)
                 print(interval)
-                id = row.id.replace("gene:", "")
-                print(id)
+                print(row)
+                print(row.attributes)
                 ort = cc.regions(
-                    method=method, species=species, interval=interval, longest=longest
+                    method=method, species=species, interval=interval, longest=longest, parent=row.id
                 )
-
+                f.write(str(row))
+                f.write("\n")
                 for aln in ort:
                     f.write(GffLine.string_from_dict(aln.gff(seq=sequence).attributes))
                     f.write("\n")

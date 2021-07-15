@@ -49,6 +49,7 @@ class ComparaConsumer:
         species="triticum_aestivum",
         interval="3B:684798558-684799943",
         longest=False,
+        parent=None
     ):
         species_sets = self.species_sets(method=method, species=species)
         ret = []
@@ -63,4 +64,6 @@ class ComparaConsumer:
                 ret.append(epas.longest)
             else:
                 ret.extend(epas.alns)
+        for aln in ret:
+            aln.parent = parent
         return ret

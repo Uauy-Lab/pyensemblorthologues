@@ -88,6 +88,15 @@ class EnsemblPairwiseAlignment:
             if a.species != self.base_id:
                 return a
         raise f"Unable to find other alignment {self}"
+    
+    @property
+    def parent(self):
+        return self.__parent
+
+    @parent.setter
+    def parent(self, parent):
+        self.__parent = parent
+
 
     def __len__(self):
         a = self.base
@@ -106,7 +115,6 @@ class EnsemblPairwiseAlignment:
         gff.attributes["chrom"] = base.seq_region
         gff.attributes["start"] = base.start
         gff.attributes["end"] = base.end
-
         gff.attributes["strand"] = base.strand
         gff.attributes["source"] = "Ensembl_compara"
         gff.attributes["feature"] = "SO:0000853"
@@ -117,6 +125,8 @@ class EnsemblPairwiseAlignment:
         gff.attributes["attributes"]["species"] = other.species
         gff.attributes["attributes"]["region"] = other.region
         gff.attributes["attributes"]["strand"] = other.strand
+        if self.parent:
+            gff.attributes["attributes"]["parent"] = self.parent
         if seq:
             gff.attributes["attributes"]["seq"] = other.seq
         return gff
