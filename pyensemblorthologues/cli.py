@@ -5,10 +5,11 @@ import pprint
 
 import Mikado.loci
 import Mikado.parsers
-from Bio import SeqIO
+from Bio import Seq, SeqIO
 from fire import Fire
 from Mikado.parsers.GFF import GffLine
 from pyensemblorthologues.MSARegions import MSARegion
+from pyfaidx import Fasta
 
 from .compara_consumer import ComparaConsumer
 
@@ -82,8 +83,9 @@ class Compara:
             if row.is_gene is True and row.attributes["biotype"] == "protein_coding":
                 interval = region_for_gene(row, flank=flank)
                 print(interval)
-                print(row)
-                print(row.attributes)
+                # row.attributes["species"] = species
+                # print(row)
+                # print(row.attributes)
                 ort = cc.regions(
                     method=method,
                     species=species,
@@ -91,7 +93,8 @@ class Compara:
                     longest=longest,
                     parent=row.id,
                 )
-                f.write(str(row))
+
+                f.write(f"{str(row)};species={species}")
                 f.write("\n")
                 for aln in ort:
                     f.write(GffLine.string_from_dict(aln.gff(seq=sequence).attributes))
@@ -105,9 +108,25 @@ class Compara:
     def msa(self, output=None, gff=None, reference=None):
         output = ouput_path(gff=gff, output=output)
         parser = Mikado.parsers.parser_factory(f"{output}/compara_aln.gff3", "gff3")
+        msa = None
+        current_parent = None
+        if reference:
+            ref = Fasta(reference)
         for row in parser:
             if row.feature == "SO:0000239":  # This is the parent region
-                pass
+                if msa:
+                    path = f"{output}/{current_parent.id}.fasta"
+                    SeqIO.write(msa.regions, path, "fasta")
+                msa = MSARegion()
+                seq = Seq.Seq(str(ref[row.chrom][row.start : row.end]))
+                msa.add_sequence(seq, row.id, row.attributes["species"])
+                current_parent = row
+            else:
+                seq = Seq.Seq(row.attributes["seq"])
+                # if row.attributes["strand" ] == "-":
+                #     seq = seq.reverse_complement()
+                offset = row.start - current_parent.start - 1
+                msa.add_sequence(seq, row.id, row.attributes["species"], offset=offset)
 
         # if len(ort) < 5:
         #     pass  # should be a continue.
