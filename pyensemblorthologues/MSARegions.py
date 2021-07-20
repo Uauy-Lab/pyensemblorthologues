@@ -32,8 +32,11 @@ class MSARegion:
         SeqIO.write(self.regions, tmp_file.name, "fasta")
         mafft_cline = MafftCommandline(
             input=tmp_file.name
-        )  # kwargs=["--localpair", "--quiet"]
-        mafft_cline.localpair = True
+        )  # kwargs=["--localpair", "--quiet"
+        # --ep 0 --genafpair
+        # mafft_cline.localpair = True
+        mafft_cline.genafpair = True
+        # mafft_cline.ep = 0
         mafft_cline.quiet = True
         print(mafft_cline)
         stdout, stderr = mafft_cline()

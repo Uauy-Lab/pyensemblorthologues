@@ -46,6 +46,10 @@ class EnsemblSequenceRegion:
     def region(self):
         return f"{self.seq_region}:{self.start}-{self.end}"
 
+    @property
+    def chrom(self):
+        return self.seq_region
+
     def __repr__(self) -> str:
         return f"<EnsembleSequenceRegion species:{self.species} region:{self.region} strand:{self.strand} >"
 
@@ -88,7 +92,7 @@ class EnsemblPairwiseAlignment:
             if a.species != self.base_id:
                 return a
         raise f"Unable to find other alignment {self}"
-    
+
     @property
     def parent(self):
         return self.__parent
@@ -97,7 +101,6 @@ class EnsemblPairwiseAlignment:
     def parent(self, parent):
         self.__parent = parent
 
-
     def __len__(self):
         a = self.base
         return len(a)
@@ -105,6 +108,95 @@ class EnsemblPairwiseAlignment:
     def __repr__(self):
         return (
             f"<EnsemblPairwiseAlignment len:{len(self)} alignments:{self.alignments} >"
+        )
+
+    # def __cmp__(self, other):
+    #     base  = self.base
+    #     other_base = other.base
+
+    #     non_ref = self.other
+    #     non_ref_other = other.other
+
+    #     if other_base.chrom != base.chrom:
+    #         return base.chrom.__cmp__(other_base.chrom)
+    #     if other_base.start != base.start:
+    #         return base.start.__cmp__(other_base.start)
+    #     if other_base.end != base.end:
+    #         return base.end.__cmp__(other_base.end)
+    #     if non_ref.species != non_ref_other.species:
+    #         return non_ref.species.__cmp__(non_ref_other.species)
+    #     return non_ref.__repr__().__cmp__(non_ref_other.__repr__())
+
+    def __eq__(self, other):
+        base = self.base
+        other_base = other.base
+        non_ref = self.other
+        non_ref_other = other.other
+        return (base.chrom, base.start, base.end, non_ref.species) == (
+            other_base.chrom,
+            other_base.start,
+            other_base.end,
+            non_ref_other.species,
+        )
+
+    def __ne__(self, other):
+        base = self.base
+        other_base = other.base
+        non_ref = self.other
+        non_ref_other = other.other
+        return (base.chrom, base.start, base.end, non_ref.species) != (
+            other_base.chrom,
+            other_base.start,
+            other_base.end,
+            non_ref_other.species,
+        )
+
+    def __lt__(self, other):
+        base = self.base
+        other_base = other.base
+        non_ref = self.other
+        non_ref_other = other.other
+        return (base.chrom, base.start, base.end, non_ref.species) < (
+            other_base.chrom,
+            other_base.start,
+            other_base.end,
+            non_ref_other.species,
+        )
+
+    def __le__(self, other):
+        base = self.base
+        other_base = other.base
+        non_ref = self.other
+        non_ref_other = other.other
+        return (base.chrom, base.start, base.end, non_ref.species) <= (
+            other_base.chrom,
+            other_base.start,
+            other_base.end,
+            non_ref_other.species,
+        )
+
+    def __gt__(self, other):
+        base = self.base
+        other_base = other.base
+        non_ref = self.other
+        non_ref_other = other.other
+        return (base.chrom, base.start, base.end, non_ref.species) > (
+            other_base.chrom,
+            other_base.start,
+            other_base.end,
+            non_ref_other.species,
+        )
+
+    def __ge__(self, other):
+        base = self.base
+        other_base = other.base
+        non_ref = self.other
+        non_ref_other = other.other
+        return (base.chrom, base.start, base.end, non_ref.species) >= (
+            other_base.chrom,
+            other_base.start,
+            other_base.end,
+            non_ref_other.species,
         )
 
     def gff(self, seq=False):
@@ -129,6 +221,7 @@ class EnsemblPairwiseAlignment:
             gff.attributes["attributes"]["parent"] = self.parent
         if seq:
             gff.attributes["attributes"]["seq"] = other.seq
+            gff.attributes["attributes"]["base_seq"] = base.seq
         return gff
 
 

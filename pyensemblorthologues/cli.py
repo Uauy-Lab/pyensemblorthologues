@@ -94,6 +94,8 @@ class Compara:
                     parent=row.id,
                 )
 
+                ort.sort()
+
                 f.write(f"{str(row)};species={species}")
                 f.write("\n")
                 for aln in ort:
@@ -117,17 +119,24 @@ class Compara:
                 if msa:
                     path = f"{output}/{current_parent.id}.fasta"
                     SeqIO.write(msa.regions, path, "fasta")
-                msa = MSARegion()
-                seq = Seq.Seq(str(ref[row.chrom][row.start : row.end]))
+                msa = MSARegion(
+                    reference=reference,
+                    species=row.attributes["species"],
+                    regions=list(),
+                )
+                seq = Seq.Seq(str(ref[row.chrom][row.start - 1 : row.end]))
                 msa.add_sequence(seq, row.id, row.attributes["species"])
                 current_parent = row
             else:
                 seq = Seq.Seq(row.attributes["seq"])
                 # if row.attributes["strand" ] == "-":
                 #     seq = seq.reverse_complement()
-                offset = row.start - current_parent.start - 1
+                offset = row.start - current_parent.start
                 msa.add_sequence(seq, row.id, row.attributes["species"], offset=offset)
-
+            pprint.pp(msa)
+        if msa:
+            path = f"{output}/{current_parent.id}.fasta"
+            SeqIO.write(msa.regions, path, "fasta")
         # if len(ort) < 5:
         #     pass  # should be a continue.
         # msa = MSARegion(ort)
