@@ -138,8 +138,8 @@ class Compara:
                         f.write(aln.sam)
                     f.write("\n")
                 i += 1
-            if i > 10:
-                break
+            #if i > 10:
+            #    break
         f.close()
         # ss = cc.species_sets(method=method, species=species)
 
