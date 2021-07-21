@@ -15,11 +15,13 @@ from pyfaidx import Fasta
 from .compara_consumer import ComparaConsumer
 
 
-def ouput_path(gff=None, output=None):
+def ouput_path(gff=None, output=None, chromosome=None):
     if output is None and gff is None:
         raise "Output folder for the pipline or GFF file to infer the path is required"
     if output is None:
         output = os.path.splitext(gff)[0]
+    if chromosome is not None:
+        output = f"{output}_{chromosome}"
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     return output
 
@@ -74,14 +76,15 @@ class Compara:
         output=None,
         longest=False,
         reference=None,
-        format="gff3",
+        format="sam",
+        chromosome = None
     ):
         cc = ComparaConsumer(server=server, compara=compara)
         # print(gff)
         # Examples to try: TraesCS7A02G175200 (Nikolai) TraesCS6A02G313800 (Andy)
         parser = Mikado.parsers.parser_factory(gff, "gff3")
         i = 0
-        output = ouput_path(gff=gff, output=output)
+        output = ouput_path(gff=gff, output=output, chromosome=chromosome)
         print(f"output: {output}")
 
         output_aln = f"{output}/compara_aln.{format}"
@@ -107,6 +110,9 @@ class Compara:
             f.write("\n")
 
         for row in parser:
+            if chromosome is not None and row.chrom != chromosome:
+                continue
+
             if row.is_gene is True and row.attributes["biotype"] == "protein_coding":
                 interval = region_for_gene(row, flank=flank)
                 print(interval)
