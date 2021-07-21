@@ -5,6 +5,7 @@ import pprint
 
 import Mikado.loci
 import Mikado.parsers
+import psutil
 from Bio import Seq, SeqIO
 from fire import Fire
 from Mikado.parsers.GFF import GffLine
@@ -24,7 +25,6 @@ def ouput_path(gff=None, output=None):
 
 
 def strip_utr(gene: Mikado.loci.Gene):
-
     for transcript in gene:
         assert isinstance(transcript, Mikado.loci.Transcript)
         if len(transcript.combined_cds) > 0:
@@ -37,6 +37,11 @@ def strip_utr(gene: Mikado.loci.Gene):
 
     gene.finalize()
     return gene
+
+
+def cmdLine():
+    my_process = psutil.Process(os.getpid())
+    return my_process.cmdline()
 
 
 def help():
@@ -68,7 +73,8 @@ class Compara:
         server="http://rest.ensembl.org",
         output=None,
         longest=False,
-        sequence=False,
+        reference=None,
+        format="gff3",
     ):
         cc = ComparaConsumer(server=server, compara=compara)
         # print(gff)
@@ -77,8 +83,29 @@ class Compara:
         i = 0
         output = ouput_path(gff=gff, output=output)
         print(f"output: {output}")
-        output_gff = f"{output}/compara_aln.gff3"
-        f = open(output_gff, "w")
+
+        output_aln = f"{output}/compara_aln.{format}"
+        f = open(output_aln, "w")
+        if format == "sam":
+            header = list()
+
+            if reference is not None:
+                ref = Fasta(reference)
+                recs = list(
+                    map(lambda record: f"@SQ\tSN:{record.name}\tLN:{len(record)}", ref)
+                )
+
+                header.extend(recs)
+            header.extend(cc.sam_header(method=method, species=species))
+
+            cmd = " ".join(cmdLine())
+            print(cmd)
+            header.append(
+                f"@PG\tID:pyensemblorthologues\tPN:pyensemblorthologues\tCL:{cmd}"
+            )
+            f.write("\n".join(header))
+            f.write("\n")
+
         for row in parser:
             if row.is_gene is True and row.attributes["biotype"] == "protein_coding":
                 interval = region_for_gene(row, flank=flank)
@@ -95,11 +122,14 @@ class Compara:
                 )
 
                 ort.sort()
-
-                f.write(f"{str(row)};species={species}")
-                f.write("\n")
+                if format == "gff":
+                    f.write(f"{str(row)};species={species}")
+                    f.write("\n")
                 for aln in ort:
-                    f.write(GffLine.string_from_dict(aln.gff(seq=sequence).attributes))
+                    if format == "gff":
+                        f.write(GffLine.string_from_dict(aln.gff(seq=True).attributes))
+                    elif format == "sam":
+                        f.write(aln.sam)
                     f.write("\n")
                 i += 1
             if i > 10:

@@ -4,6 +4,8 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Mikado.parsers.GFF import GffLine
 
+# from bitfield import Binary
+
 
 class EnsemblSequenceRegion:
     def __init__(self, data):
@@ -223,6 +225,64 @@ class EnsemblPairwiseAlignment:
             gff.attributes["attributes"]["seq"] = other.seq
             gff.attributes["attributes"]["base_seq"] = base.seq
         return gff
+
+    @property
+    def id(self):
+        return f"{self.other.species}:{self.other.region}"
+
+    @property
+    def sam(self):
+        flag = 64 & 255
+        base = self.base
+        other = self.other
+        if other.strand == "-":
+            flag = flag | 16
+        mapq = 255
+        cigar = self.cigar
+        seq = other.seq.replace("-", "")
+        tlen = len(seq)
+        tags = [
+            f"RG:Z:{other.species}",
+            f"ch:Z:{other.chrom}",
+            f"st:i:{other.start}",
+            f"en:i:{other.end}",
+            f"pt:Z:{self.parent}",
+        ]
+        tagstr = "\t".join(tags)
+        # ret = f"{self.id}:{self.parent}\t{flag}\t{base.chrom}\t{base.start}\t{mapq}\t{cigar}\t*\t*\t{tlen}\t{seq}\t*\t{tagstr}"
+        ret = f"{self.id}:{self.parent}\t{flag}\t{base.chrom}\t{base.start}\t{mapq}\t{cigar}\t*\t0\t{tlen}\t{seq}\t*\t{tagstr}"
+        return ret
+
+    @property
+    def cigar(self):
+        base = self.base.seq
+        other = self.other.seq
+        current = ""
+        last = ""
+        current_len = 0
+        cg = ""
+        for i in range(0, len(base)):
+            b = base[i]
+            o = other[i]
+            if b == "-" and o == "-":
+                raise f"Unexpected double gap in  {self.id} {i}:\n{base}\n{other}"
+            elif b == o:
+                current = "M"
+            elif b == "-":
+                current = "I"
+            elif o == "-":
+                current = "D"
+            elif b != o:
+                current = "M"
+
+            if current != last and current_len > 0:
+                cg = f"{cg}{current_len}{last}"
+                current_len = 0
+            current_len += 1
+            last = current
+        if current_len > 0:
+            cg = f"{cg}{current_len}{last}"
+        return cg
 
 
 class EnsemblPairwiseAlignments:

@@ -49,7 +49,7 @@ class ComparaConsumer:
         species="triticum_aestivum",
         interval="3B:684798558-684799943",
         longest=False,
-        parent=None
+        parent=None,
     ):
         species_sets = self.species_sets(method=method, species=species)
         ret = []
@@ -67,3 +67,14 @@ class ComparaConsumer:
         for aln in ret:
             aln.parent = parent
         return ret
+
+    def sam_header(
+        self, method="LASTZ_NET", species="triticum_aestivum", reference=None
+    ):
+        species_sets = self.species_sets(method=method, species=species)
+        lines = []
+
+        for species in species_sets:
+            lines.append(f"@RG\tID:{species}\tSM:{species}")
+
+        return lines
