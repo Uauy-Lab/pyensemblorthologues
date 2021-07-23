@@ -2,4 +2,4 @@
 
 __author__ = """Ricardo H. Ramirez-Gonzalez"""
 __email__ = "ricardo.ramirez-gonzalez@jic.ac.uk"
-__version__ = "0.1.0"
+__version__ = "0.1.2"

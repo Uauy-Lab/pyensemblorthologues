@@ -2,6 +2,7 @@
 import os
 import pathlib
 import pprint
+import re
 
 import Mikado.loci
 import Mikado.parsers
@@ -9,6 +10,7 @@ import psutil
 from Bio import Seq, SeqIO
 from fire import Fire
 from Mikado.parsers.GFF import GffLine
+from pyensemblorthologues.compara_writer import ComparaWriter
 from pyensemblorthologues.MSARegions import MSARegion
 from pyfaidx import Fasta
 
@@ -41,11 +43,6 @@ def strip_utr(gene: Mikado.loci.Gene):
     return gene
 
 
-def cmdLine():
-    my_process = psutil.Process(os.getpid())
-    return my_process.cmdline()
-
-
 def help():
     print("pyensemblorthologues")
     print("=" * len("pyensemblorthologues"))
@@ -76,44 +73,34 @@ class Compara:
         output=None,
         longest=False,
         reference=None,
-        format="sam",
-        chromosome = None
+        chromosome=None,
     ):
         cc = ComparaConsumer(server=server, compara=compara)
         # print(gff)
         # Examples to try: TraesCS7A02G175200 (Nikolai) TraesCS6A02G313800 (Andy)
         parser = Mikado.parsers.parser_factory(gff, "gff3")
-        i = 0
+        # i = 0
         output = ouput_path(gff=gff, output=output, chromosome=chromosome)
         print(f"output: {output}")
 
-        output_aln = f"{output}/compara_aln.{format}"
-        f = open(output_aln, "w")
-        if format == "sam":
-            header = list()
+        output_aln = f"{output}/compara_aln.sam"
+        cw = ComparaWriter(output_aln, compara_consumer=cc, reference=reference)
 
-            if reference is not None:
-                ref = Fasta(reference)
-                recs = list(
-                    map(lambda record: f"@SQ\tSN:{record.name}\tLN:{len(record)}", ref)
-                )
-
-                header.extend(recs)
-            header.extend(cc.sam_header(method=method, species=species))
-
-            cmd = " ".join(cmdLine())
-            print(cmd)
-            header.append(
-                f"@PG\tID:pyensemblorthologues\tPN:pyensemblorthologues\tCL:{cmd}"
-            )
-            f.write("\n".join(header))
-            f.write("\n")
-
+        cw.open(species=species, method=method)
+        last_gene = None
+        if cw.last_record_id is not None:
+            last_gene = cw.last_record_id.split(":")[0]
+        print(f"The last pt was: {cw.last_record_id} ({last_gene})")
+        printing_started = last_gene is None
         for row in parser:
             if chromosome is not None and row.chrom != chromosome:
                 continue
 
-            if row.is_gene is True and row.attributes["biotype"] == "protein_coding":
+            if (
+                row.is_gene is True
+                and row.attributes["biotype"] == "protein_coding"
+                and printing_started
+            ):
                 interval = region_for_gene(row, flank=flank)
                 print(interval)
                 # row.attributes["species"] = species
@@ -126,21 +113,16 @@ class Compara:
                     longest=longest,
                     parent=row.id,
                 )
-
                 ort.sort()
-                if format == "gff":
-                    f.write(f"{str(row)};species={species}")
-                    f.write("\n")
                 for aln in ort:
-                    if format == "gff":
-                        f.write(GffLine.string_from_dict(aln.gff(seq=True).attributes))
-                    elif format == "sam":
-                        f.write(aln.sam)
-                    f.write("\n")
-                i += 1
-            #if i > 10:
+                    cw.write_aln(aln)
+            if not printing_started and row.is_gene is True:
+                if re.sub("gene:", "", row.id) == last_gene:
+                    printing_started = True
+                # i += 1
+            # if i > 10:
             #    break
-        f.close()
+        cw.close()
         # ss = cc.species_sets(method=method, species=species)
 
     def msa(self, output=None, gff=None, reference=None):
