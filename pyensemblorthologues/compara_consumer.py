@@ -22,22 +22,25 @@ class ComparaConsumer:
         while current_try < max_try:
             try:
                 r = requests.get(
-                    full_url, headers={"Content-Type": "application/json"}, timeout=40
+                    full_url,
+                    headers={"Content-Type": "application/json"},
+                    timeout=max_wait,
                 )
                 if r.ok:
                     return r.json()
                 if r.status_code == 400:
                     return None
-                current_try = current_try + 1
                 r.raise_for_status()
             except Exception as exeption:
+                current_try = current_try + 1
                 print(exeption)
                 print(
-                    f"Waiting {wait_seconds} seconds to retry({current_try})  #{full_url}"
+                    f"Waiting {wait_seconds} seconds to retry({current_try})\n{full_url}"
                 )
                 time.sleep(wait_seconds)
+                current_try += 1
                 wait_seconds = wait_seconds * 2
-                if wait_seconds > max_wait:
+                if wait_seconds >= max_wait:
                     wait_seconds = max_wait
         raise RuntimeError(f"Unable to download {url}")
 
