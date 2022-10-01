@@ -44,7 +44,14 @@ class ComparaConsumer:
 
         url = f"alignment/region/{species}/{interval}"
         args = f"compara={self.compara};method={method};species_set={species};species_set={target_species}"
-        return self.request(url, args)
+        ret = None
+        try
+            ret = self.request(url, args)
+        except 
+            with open("errors.txt","a") as out :
+                out.write(f"Failed:{species}:{target}:{interval}:{method}")
+        return ret 
+
 
     def species_sets(self, method="LASTZ_NET", species="triticum_aestivum"):
         url = f"info/compara/species_sets/{method}"
