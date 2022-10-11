@@ -16,23 +16,33 @@ class ComparaConsumer:
     def request(self, url, args, max_try=10, max_wait=600) -> Any or None:
         full_url = f"{self.server}/{url}?{args}"
         # print(full_url)
-        r = requests.get(full_url, headers={"Content-Type": "application/json"})
+
         wait_seconds = 1
         current_try = 0
         while current_try < max_try:
-            if r.ok:
-                return r.json()
-            if r.status_code == 400:
-                return None
-            current_try = current_try + 1
-            print(
-                f"Waiting {wait_seconds} seconds to retry({current_try})  #{full_url}"
-            )
-            time.sleep(wait_seconds)
-            wait_seconds = wait_seconds * 2
-            if wait_seconds > max_wait:
-                wait_seconds = max_wait
-        r.raise_for_status()
+            try:
+                r = requests.get(
+                    full_url,
+                    headers={"Content-Type": "application/json"},
+                    timeout=max_wait,
+                )
+                if r.ok:
+                    return r.json()
+                if r.status_code == 400:
+                    return None
+                r.raise_for_status()
+            except Exception as exeption:
+                current_try = current_try + 1
+                print(exeption)
+                print(
+                    f"Waiting {wait_seconds} seconds to retry({current_try})\n{full_url}"
+                )
+                time.sleep(wait_seconds)
+                current_try += 1
+                wait_seconds = wait_seconds * 2
+                if wait_seconds >= max_wait:
+                    wait_seconds = max_wait
+        raise RuntimeError(f"Unable to download {url}")
 
     def region(
         self,
