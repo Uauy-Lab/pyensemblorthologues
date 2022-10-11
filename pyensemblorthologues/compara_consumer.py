@@ -55,13 +55,13 @@ class ComparaConsumer:
         url = f"alignment/region/{species}/{interval}"
         args = f"compara={self.compara};method={method};species_set={species};species_set={target_species}"
         ret = None
-        try
+        try:
             ret = self.request(url, args)
-        except 
-            with open("errors.txt","a") as out :
-                out.write(f"Failed:{species}:{target}:{interval}:{method}")
-        return ret 
-
+        except Exception as exeption:
+            print(exeption)
+            with open("errors.txt", "a") as out:
+                out.write(f"Failed:{species}:{target_species}:{interval}:{method}\n")
+        return ret
 
     def species_sets(self, method="LASTZ_NET", species="triticum_aestivum"):
         url = f"info/compara/species_sets/{method}"
