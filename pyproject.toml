@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "pyensemblorthologues"
-version = "0.2.1"
+version = "0.2.2"
 homepage = "https://github.com/homonecloco/pyensemblorthologues"
 description = "Tool to download ortologue genes from ensembl compara."
 authors = ["Ricardo H. Ramirez-Gonzalez <ricardo.ramirez-gonzalez@jic.ac.uk>"]
